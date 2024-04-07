@@ -8,7 +8,7 @@ st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
 token = None
 
-def signin() -> str:
+def signin():
     global token
     with st.form(key="signin", clear_on_submit=True):
         st.subheader(':green[Sign In]')
@@ -19,11 +19,12 @@ def signin() -> str:
                 "email": email,
                 "password": password
             }
-            response = requests.post(url="http://localhost:8000/v1/signin", data=json.dumps(inputs))
+            response = requests.post(url="http://192.168.29.100:8000/v1/signin", data=json.dumps(inputs))
             if response.status_code == 200:
                 data = json.loads(response.text)
                 token = data['model']
                 st.session_state.token = token
+                st.session_state.email = email
                 switch_page("upload")
             else:
                 st.error("User name and password doesn't match")

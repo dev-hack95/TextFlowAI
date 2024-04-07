@@ -24,7 +24,7 @@ def signup():
                 "confirm_password": confirm_password,
                 "admin": True
             }
-            response = requests.post(url="http://localhost:8000/v1/signup", data=json.dumps(inputs))
+            response = requests.post(url="http://192.168.29.100:8000/v1/signup", data=json.dumps(inputs))
             if response.status_code == 200:
                 st.success("Account is created succesfully")
                 st.toast("Redirect to Login Page......")
