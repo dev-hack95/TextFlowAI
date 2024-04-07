@@ -132,7 +132,8 @@ with col1:
                 break
             time.sleep(5)
 
-        chatAI(res_text)
+        if res_text != "":
+            chatAI(res_text)
 
 with col2:
     if st.button("SignOut"):
