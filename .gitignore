@@ -2,3 +2,4 @@ venv
 .env
 session
 *.mp4
+chroma_db
