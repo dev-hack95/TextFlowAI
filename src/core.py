@@ -6,16 +6,10 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.chat_models import ChatOllama
 from langchain.chains import RetrievalQA
-from langchain.vectorstores import Pinecone
 from langchain.document_loaders import TextLoader
-from langchain.chains import ConversationalRetrievalChain
 from langchain.text_splitter import CharacterTextSplitter
-import pinecone
+from langchain.vectorstores import Chroma
 
-pinecone.init(
-    api_key=os.environ["api_key"],
-    environment=os.environ["environment"],
-)
 
 def add_data():
     loder = TextLoader("session/output.txt", encoding="utf-8")
@@ -23,20 +17,23 @@ def add_data():
     embedding_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-V2")
     text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100, separator=".")
     texts = text_splitter.split_documents(document)
-    Pinecone.from_documents(texts, embedding_model)
+    db = Chroma.from_documents(texts, embedding_model, collection_name="chroma_collection", persist_directory='chroma_db')
+    db.persist()
 
 
 def run_llm(query: str) -> Any:
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-V2")
-    docsearch = Pinecone.from_existing_index(
-        index_name="testindex2", embedding=embeddings
+    embedding_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-V2")
+    docsearch = Chroma(
+        persist_directory='chroma_db',
+        embedding_function=embedding_model,
+        collection_name='chroma_collection'
     )
     chat = ChatOllama(
-        base_url="https://fbc6-104-198-103-21.ngrok-free.app",
-        model="mistral:7b",
+        base_url="https://a089-34-142-146-166.ngrok-free.app",
+        model="mistral",
         callback_manager=callback_manager)
-    qa = ConversationalRetrievalChain.from_llm(
+    qa = RetrievalQA.from_chain_type(
         llm=chat,
         chain_type="stuff",
         retriever=docsearch.as_retriever(),

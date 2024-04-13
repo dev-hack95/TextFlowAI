@@ -6,7 +6,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from confluent_kafka import Consumer
 from streamlit_extras.switch_page_button import switch_page
-from core import add_data, run_llm
+from core import run_llm, add_data
 
 # Config
 load_dotenv(".env")
@@ -31,6 +31,7 @@ consumer = Consumer({
 consumer.subscribe(["Kafkatopic2"])
 
 consume = True
+st.session_state.output_count = 0
 
 tab1, tab2 = st.tabs(["Upload", "Chat"])
 
@@ -75,14 +76,20 @@ with tab1:
         
                     data = json.loads(message.value())
                     output_text = data.get("text")
-        
-                    if upload_video is not None and output_text is not None:
+
+                    if st.session_state.output_count == 1:
+                        consume = False
+
+                    elif upload_video is not None and output_text is not None:
+                        st.session_state.output_count = 1
                         consume = False
                         with open("session/output.txt", 'w+') as file:
                             file.write(output_text)
                         st.toast("Your ready to chat")
-                    else:
+                    elif upload_video is None:
+                        st.session_state.output_count = 0
                         consume = True
+
                 print(consume)
 
     with col2:
@@ -93,7 +100,6 @@ with tab1:
 with tab2:
         st.header("🔗AI Bot")
         add_data()
-
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
                 {"role": "assistant", "content": "Hi, I'm a chatbot who helps you in gym training and dietetics. How can I help you?"}
@@ -107,6 +113,6 @@ with tab2:
             st.chat_message("user").write(prompt1)
         
             with st.spinner("Thinking..."):
-                response = run_llm(prompt1)
+                response = run_llm(prompt1)['result']
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.write(response)
