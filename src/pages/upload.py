@@ -6,7 +6,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from confluent_kafka import Consumer
 from streamlit_extras.switch_page_button import switch_page
-from core import run_llm, add_data
+from core import ChatAI
 
 # Config
 load_dotenv(".env")
@@ -99,7 +99,7 @@ with tab1:
 
 with tab2:
         st.header("🔗AI Bot")
-        add_data()
+        ChatAI.add_data()
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
                 {"role": "assistant", "content": "Hi, I'm a chatbot who helps you in gym training and dietetics. How can I help you?"}
@@ -113,6 +113,6 @@ with tab2:
             st.chat_message("user").write(prompt1)
         
             with st.spinner("Thinking..."):
-                response = run_llm(prompt1)['result']
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.write(response)
+                response = st.write_stream(ChatAI.run_llm(prompt1))
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.write(response)
